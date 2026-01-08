@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MSY | Analisador de Performance Semanal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ==================== RESET & BASE ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            /* MSY Brand Colors */
+            --msy-red: #8B1538;
+            --msy-red-dark: #5D0E26;
+            --msy-red-glow: rgba(139, 21, 56, 0.4);
+            --msy-black: #0A0A0A;
+            --msy-black-card: #121212;
+            --msy-gray-dark: #1A1A1A;
+            --msy-gray-mid: #2A2A2A;
+            --msy-gray-light: #404040;
+            --msy-text: #E8E8E8;
+            --msy-text-muted: #8A8A8A;
+            --msy-border: rgba(139, 21, 56, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: var(--msy-black);
+            color: var(--msy-text);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Fundo com grid sutil de elite */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, var(--msy-gray-dark) 1px, transparent 1px),
+                linear-gradient(var(--msy-gray-dark) 1px, transparent 1px);
+            background-size: 100px 100px;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ==================== CONTAINER PRINCIPAL ==================== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== HEADER ==================== */
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--msy-red) 0%, #C41E3A 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px var(--msy-red-glow);
+            animation: glowPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { filter: drop-shadow(0 0 10px var(--msy-red-glow)); }
+            50% { filter: drop-shadow(0 0 20px var(--msy-red-glow)); }
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--msy-text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 40px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* ==================== CONTROLES ==================== */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: var(--msy-black-card);
+            border-radius: 12px;
+            border: 1px solid var(--msy-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(139, 21, 56, 0.1);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--msy-text-muted);
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .date-inputs label {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 0.75rem;
+        }
+
+        input[type="file"],
+        input[type="date"],
+        button,
+        textarea,
+        #searchBar {
+            padding: 14px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--msy-gray-light);
+            background: var(--msy-gray-mid);
+            color: var(--msy-text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="file"]:hover,
+        input[type="date"]:hover,
+        #searchBar:hover {
+            border-color: var(--msy-red);
+            background: var(--msy-gray-dark);
+        }
+
+        input[type="file"]:focus,
+        input[type="date"]:focus,
+        #searchBar:focus {
+            border-color: var(--msy-red);
+            box-shadow: 0 0 0 3px var(--msy-red-glow);
+        }
+
+        /* ==================== BOTÕES ==================== */
+        button {
+            background: linear-gradient(135deg, var(--msy-red) 0%, var(--msy-red-dark) 100%);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px var(--msy-red-glow);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--msy-red-glow);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* ==================== FILTROS ==================== */
+        #filtros-area {
+            display: none;
+            background: var(--msy-black-card);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border: 1px solid var(--msy-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #filtros-area > span {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: var(--msy-red);
+            margin-right: 15px;
+        }
+
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--msy-gray-mid);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            border: 1px solid var(--msy-gray-light);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .chip::before {
+            content: '●';
+            color: var(--msy-text-muted);
+            font-size: 0.7em;
+            transition: color 0.3s;
+        }
+
+        .chip:hover {
+            background: var(--msy-gray-dark);
+            border-color: var(--msy-red);
+            transform: translateY(-2px);
+        }
+
+        .chip.active {
+            background: var(--msy-red);
+            border-color: var(--msy-red);
+            color: white;
+            box-shadow: 0 4px 15px var(--msy-red-glow);
+        }
+
+        .chip.active::before {
+            color: white;
+        }
+
+        /* ==================== TABELA ==================== */
+        #resultado {
+            margin-top: 30px;
+            overflow-x: auto;
+            border-radius: 12px;
+            background: var(--msy-black-card);
+            border: 1px solid var(--msy-border);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 600px;
+        }
+
+        th, td {
+            padding: 16px;
+            text-align: center;
+            border-bottom: 1px solid var(--msy-border);
+        }
+
+        th {
+            background: linear-gradient(180deg, var(--msy-gray-mid) 0%, var(--msy-gray-dark) 100%);
+            color: var(--msy-red);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--msy-gray-dark);
+            transform: scale(1.01);
+            box-shadow: inset 0 0 20px var(--msy-red-glow);
+        }
+
+        tbody tr:nth-child(even) {
+            background: rgba(26, 26, 26, 0.5);
+        }
+
+        tfoot tr {
+            background: var(--msy-red-dark);
+            font-weight: 700;
+            color: white;
+        }
+
+        tfoot td {
+            border-bottom: none;
+        }
+
+        /* ==================== ÁREA DA IA ==================== */
+        #area-ia {
+            display: none;
+            margin-top: 50px;
+            padding-top: 40px;
+            border-top: 2px solid var(--msy-red);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #area-ia h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            color: var(--msy-red);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .ia-box {
+            background: var(--msy-black-card);
+            padding: 35px;
+            border-radius: 12px;
+            border: 1px solid var(--msy-red);
+            box-shadow: 0 8px 40px var(--msy-red-glow), inset 0 1px 0 rgba(139, 21, 56, 0.2);
+        }
+
+        .ia-box label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            color: var(--msy-text-muted);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: 20px;
+            resize: vertical;
+            font-family: 'Inter', monospace;
+            line-height: 1.6;
+        }
+
+        #relatorio-final {
+            margin-top: 30px;
+            padding: 30px;
+            background: var(--msy-gray-dark);
+            border-radius: 10px;
+            border-left: 4px solid var(--msy-red);
+            line-height: 1.8;
+            font-size: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        #relatorio-final h3 {
+            color: var(--msy-red);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #relatorio-final p {
+            margin-bottom: 15px;
+        }
+
+        /* ==================== LOADING ==================== */
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--msy-red);
+            font-weight: 700;
+            margin: 30px 0;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* ==================== RESPONSIVIDADE ==================== */
+        @media (max-width: 768px) {
+            .container { padding: 20px 15px; }
+            h1 { font-size: 1.8rem; }
+            .controls { 
+                grid-template-columns: 1fr; 
+                padding: 20px; 
+            }
+            .date-inputs { flex-direction: column; }
+            table { font-size: 0.85rem; }
+            th, td { padding: 10px 8px; }
+            .ia-box { padding: 20px; }
+        }
+
+        /* ==================== ACESSIBILIDADE ==================== */
+        *:focus-visible {
+            outline: 2px solid var(--msy-red);
+            outline-offset: 2px;
+        }
+
+        /* Marca d'água sutil MSY */
+        .container::after {
+            content: 'MSY';
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            color: var(--msy-red);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>MSY ANALYTICS</h1>
+    <div class="subtitle">Sistema de Performance Semanal</div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Arquivo do Chat</label>
+            <input type="file" id="arquivoInput" accept=".txt">
+        </div>
+        
+        <div class="control-group">
+            <label>Período de Análise</label>
+            <div class="date-inputs">
+                <label>Início <input type="date" id="dataInicio" value="2026-01-01"></label>
+                <label>Fim <input type="date" id="dataFim" value="2026-01-05"></label>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label style="opacity: 0;">Ação</label>
+            <button onclick="enviarParaAnalise()">🚀 Iniciar Análise</button>
+        </div>
+    </div>
+
+    <div id="filtros-area">
+        <span>Filtros:</span>
+        <input type="text" id="searchBar" placeholder="Buscar membro..." onkeyup="filtrarPorTexto()">
+        <div class="chips-container" id="listaMembros"></div>
+    </div>
+
+    <div id="loadingAnalise" class="loading">⏳ Processando dados</div>
+    <div id="resultado"></div>
+
+    <div id="area-ia">
+        <h2>🤖 Relatório Inteligente</h2>
+        <div class="ia-box">
+            <label>Instrução Personalizada (Opcional):</label>
+            <textarea id="promptIA" placeholder="Ex: Seja sarcástico e faça piada com quem falou pouco. Dê um prêmio fictício para o top 1."></textarea>
+            <button onclick="gerarRelatorioIA()">✨ Gerar Relatório com IA</button>
+            
+            <div id="loadingIA" class="loading">🧠 IA processando análise</div>
+            <div id="relatorio-final"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- URLs DOS SEUS WEBHOOKS (MANTIDOS INTACTOS) ---
+    const URL_WEBHOOK_ANALISE = 'https://t4msy.app.n8n.cloud/webhook/analisar-chat'; 
+    const URL_WEBHOOK_RELATORIO = 'https://t4msy.app.n8n.cloud/webhook/gerar-relatorio';
+    
+    let dadosParaRelatorio = ""; 
+
+    async function enviarParaAnalise() {
+        const fileInput = document.getElementById('arquivoInput');
+        if (!fileInput.files[0]) { alert("Selecione um arquivo!"); return; }
+
+        document.getElementById('loadingAnalise').style.display = 'block';
+        document.getElementById('resultado').innerHTML = '';
+        document.getElementById('area-ia').style.display = 'none';
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const response = await fetch(URL_WEBHOOK_ANALISE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat: e.target.result,
+                        inicio: document.getElementById('dataInicio').value,
+                        fim: document.getElementById('dataFim').value
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('loadingAnalise').style.display = 'none';
+                
+                if(data.html) {
+                    document.getElementById('resultado').innerHTML = data.html;
+                    
+                    setTimeout(() => {
+                        inicializarFiltros(); 
+                        extrairDadosDaTabela();
+                        document.getElementById('area-ia').style.display = 'block';
+                    }, 100);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Erro na conexão da análise.");
+            }
+        };
+        reader.readAsText(fileInput.files[0]);
+    }
+
+    async function gerarRelatorioIA() {
+        const promptUsuario = document.getElementById('promptIA').value;
+        const divRelatorio = document.getElementById('relatorio-final');
+        const loadingIA = document.getElementById('loadingIA');
+
+        console.log("Enviando dados para IA:", dadosParaRelatorio);
+
+        if(!dadosParaRelatorio || dadosParaRelatorio.length < 10) { 
+            alert("Erro: Os dados da tabela não foram carregados. Tente analisar novamente."); 
+            return; 
+        }
+
+        loadingIA.style.display = 'block';
+        divRelatorio.innerHTML = '';
+
+        try {
+            const response = await fetch(URL_WEBHOOK_RELATORIO, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dados: dadosParaRelatorio,
+                    prompt: promptUsuario || "Faça uma análise geral."
+                })
+            });
+
+            const data = await response.json();
+            loadingIA.style.display = 'none';
+            
+            const textoFinal = data.output || data.text || data.content || data.message;
+
+            if (textoFinal) {
+                divRelatorio.innerHTML = textoFinal;
+            } else {
+                divRelatorio.innerText = "Recebi resposta do n8n, mas o campo de texto estava vazio. Verifique o JSON: " + JSON.stringify(data);
+            }
+
+        } catch (error) {
+            console.error(error);
+            loadingIA.style.display = 'none';
+            divRelatorio.innerText = "Erro ao gerar relatório.";
+        }
+    }
+
+    function extrairDadosDaTabela() {
+        const rows = document.querySelectorAll('#resultado tbody tr');
+        let resumo = "--- DADOS DA SEMANA ---\n";
+        
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cells = row.cells;
+                const nome = cells[0].innerText;
+                const total = cells[cells.length - 2].innerText;
+                const media = cells[cells.length - 1].innerText;
+                
+                resumo += `Membro: ${nome} | Total: ${total} | Média: ${media}/dia\n`;
+            }
+        });
+        
+        dadosParaRelatorio = resumo;
+        console.log("Dados extraídos com sucesso!");
+    }
+
+    function inicializarFiltros() {
+        const table = document.querySelector('#resultado table');
+        const lista = document.getElementById('listaMembros');
+        const area = document.getElementById('filtros-area');
+        if(!table) return;
+        
+        lista.innerHTML = '';
+        area.style.display = 'block';
+        
+        const rows = table.querySelectorAll('tbody tr');
+        const linhasParaFiltrar = Array.from(rows).filter(r => !r.cells[0].innerText.includes("TOTAL DO GRUPO"));
+
+        linhasParaFiltrar.forEach(row => {
+            const nome = row.cells[0].innerText;
+            row.setAttribute('data-nome', nome.toLowerCase());
+            
+            const chip = document.createElement('div');
+            chip.className = 'chip active';
+            chip.innerText = nome;
+            chip.onclick = () => {
+                chip.classList.toggle('active');
+                row.style.display = chip.classList.contains('active') ? '' : 'none';
+                extrairDadosDaTabela();
+            };
+            lista.appendChild(chip);
+        });
+    }
+
+    function filtrarPorTexto() {
+        const termo = document.getElementById('searchBar').value.toLowerCase();
+        document.querySelectorAll('#resultado tbody tr').forEach(row => {
+            if(row.cells[0].innerText.includes("TOTAL DO GRUPO")) return;
+            const nome = row.getAttribute('data-nome') || "";
+            row.style.display = nome.includes(termo) ? '' : 'none';
+        });
+        extrairDadosDaTabela();
+    }
+</script>
+
+</body>
+</html>
