@@ -10,7 +10,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
-            /* MSY Brand Colors */
             --msy-red: #8B1538;
             --msy-red-dark: #5D0E26;
             --msy-red-glow: rgba(139, 21, 56, 0.4);
@@ -35,7 +34,6 @@
             position: relative;
         }
 
-        /* Fundo com grid sutil de elite */
         body::before {
             content: '';
             position: fixed;
@@ -52,7 +50,6 @@
             z-index: 0;
         }
 
-        /* ==================== CONTAINER PRINCIPAL ==================== */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -67,7 +64,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* ==================== HEADER ==================== */
         h1 {
             font-size: 2.5rem;
             font-weight: 900;
@@ -97,7 +93,6 @@
             text-transform: uppercase;
         }
 
-        /* ==================== CONTROLES ==================== */
         .controls {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -167,7 +162,6 @@
             box-shadow: 0 0 0 3px var(--msy-red-glow);
         }
 
-        /* ==================== BOTÕES ==================== */
         button {
             background: linear-gradient(135deg, var(--msy-red) 0%, var(--msy-red-dark) 100%);
             color: white;
@@ -209,7 +203,6 @@
             transform: translateY(0);
         }
 
-        /* ==================== FILTROS ==================== */
         #filtros-area {
             display: none;
             background: var(--msy-black-card);
@@ -275,7 +268,6 @@
             color: white;
         }
 
-        /* ==================== TABELA ==================== */
         #resultado {
             margin-top: 30px;
             overflow-x: auto;
@@ -310,9 +302,7 @@
             z-index: 10;
         }
 
-        tr {
-            transition: all 0.2s ease;
-        }
+        tr { transition: all 0.2s ease; }
 
         tbody tr:hover {
             background: var(--msy-gray-dark);
@@ -330,11 +320,8 @@
             color: white;
         }
 
-        tfoot td {
-            border-bottom: none;
-        }
+        tfoot td { border-bottom: none; }
 
-        /* ==================== ÁREA DA IA ==================== */
         #area-ia {
             display: none;
             margin-top: 50px;
@@ -406,11 +393,8 @@
             letter-spacing: 1px;
         }
 
-        #relatorio-final p {
-            margin-bottom: 15px;
-        }
+        #relatorio-final p { margin-bottom: 15px; }
 
-        /* ==================== LOADING ==================== */
         .loading {
             display: none;
             text-align: center;
@@ -438,7 +422,6 @@
             60%, 100% { content: '...'; }
         }
 
-        /* ==================== RESPONSIVIDADE ==================== */
         @media (max-width: 768px) {
             .container { padding: 20px 15px; }
             h1 { font-size: 1.8rem; }
@@ -452,13 +435,11 @@
             .ia-box { padding: 20px; }
         }
 
-        /* ==================== ACESSIBILIDADE ==================== */
         *:focus-visible {
             outline: 2px solid var(--msy-red);
             outline-offset: 2px;
         }
 
-        /* Marca d'água sutil MSY */
         .container::after {
             content: 'MSY';
             position: fixed;
@@ -514,7 +495,10 @@
         <div class="ia-box">
             <label>Instrução Personalizada (Opcional):</label>
             <textarea id="promptIA" placeholder="Ex: Seja sarcástico e faça piada com quem falou pouco. Dê um prêmio fictício para o top 1."></textarea>
-            <button onclick="gerarRelatorioIA()">✨ Gerar Relatório com IA</button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+                <button onclick="gerarRelatorioIA()">✨ Gerar Relatório com IA</button>
+                <button onclick="gerarRelatorioBase()">📄 Gerar Relatório Base</button>
+            </div>
             
             <div id="loadingIA" class="loading">🧠 IA processando análise</div>
             <div id="relatorio-final"></div>
@@ -523,7 +507,6 @@
 </div>
 
 <script>
-    // --- URLs DOS SEUS WEBHOOKS (MUDAR) ---
     const URL_WEBHOOK_ANALISE = 'https://t4msy.app.n8n.cloud/webhook/analisar-chat'; 
     const URL_WEBHOOK_RELATORIO = 'https://t4msy.app.n8n.cloud/webhook-test/gerar-relatorio';
     
@@ -577,9 +560,9 @@
 
         console.log("Enviando dados para IA:", dadosParaRelatorio);
 
-        if(!dadosParaRelatorio || dadosParaRelatorio.length < 10) { 
-            alert("Erro: Os dados da tabela não foram carregados. Tente analisar novamente."); 
-            return; 
+        if (!dadosParaRelatorio || dadosParaRelatorio.length < 10) {
+            alert("Erro: Os dados da tabela não foram carregados. Tente analisar novamente.");
+            return;
         }
 
         loadingIA.style.display = 'block';
@@ -595,6 +578,15 @@
                 })
             });
 
+            if (!response.ok) {
+                loadingIA.style.display = 'none';
+                divRelatorio.innerHTML = `
+                    <p><b>⚠️ Atenção:</b> o relatório automático está em modo de teste.</p>
+                    <p>Acesse o n8n e ative o fluxo <b>gerar-relatorio</b> no modo Test para utilizar este botão.</p>
+                `;
+                return;
+            }
+
             const data = await response.json();
             loadingIA.style.display = 'none';
             
@@ -603,15 +595,148 @@
             if (textoFinal) {
                 divRelatorio.innerHTML = textoFinal;
             } else {
-                divRelatorio.innerText = "Recebi resposta do n8n, mas o campo de texto estava vazio. Verifique o JSON: " + JSON.stringify(data);
+                divRelatorio.innerText =
+                    "Recebi resposta do n8n, mas o campo de texto estava vazio. Verifique o JSON: " +
+                    JSON.stringify(data);
             }
 
         } catch (error) {
             console.error(error);
             loadingIA.style.display = 'none';
-            divRelatorio.innerText = "Erro ao gerar relatório.";
+            divRelatorio.innerHTML = `
+                <p><b>⚠️ Atenção:</b> não foi possível se conectar ao n8n agora.</p>
+                <p>Ative o fluxo <b>gerar-relatorio</b> no n8n (modo Test) para usar o relatório com IA.</p>
+            `;
         }
     }
+
+    function gerarRelatorioBase() {
+    const divRelatorio = document.getElementById('relatorio-final');
+
+    if (!dadosParaRelatorio || dadosParaRelatorio.length < 10) {
+        alert("Analise o chat primeiro para gerar o relatório base.");
+        return;
+    }
+
+    const linhas = dadosParaRelatorio
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.startsWith('Membro:'));
+
+    if (linhas.length === 0) {
+        alert("Não foi possível ler os dados da semana.");
+        return;
+    }
+
+    let membros = [];
+
+    linhas.forEach(linha => {
+        // Membro: Nome | Total: 1327 | Média: 663.5/dia
+        const mMatch = linha.match(/^Membro:\s*(.*?)\s*\|/);
+        const tMatch = linha.match(/Total:\s*([0-9]+)/);
+        const medMatch = linha.match(/Média:\s*([0-9.]+)/);
+
+        if (mMatch && tMatch && medMatch) {
+            membros.push({
+                nome: mMatch[1],
+                total: Number(tMatch[1]),
+                media: Number(medMatch[1])
+            });
+        }
+    });
+
+    if (membros.length === 0) {
+        alert("Não foi possível interpretar os dados da semana.");
+        return;
+    }
+
+    membros.sort((a, b) => b.total - a.total);
+    const top3 = membros.slice(0, 3);
+    const totalGrupo = membros.reduce((acc, m) => acc + m.total, 0);
+    const mediaGrupo = totalGrupo / membros.length;
+
+    const inicio = document.getElementById('dataInicio').value || '---';
+    const fim = document.getElementById('dataFim').value || '---';
+
+    // Cabeçalho
+    const cabecalho = `
+<p><b>Período analisado:</b> ${inicio} até ${fim}</p>
+<p><b>Total de mensagens do grupo:</b> ${totalGrupo}</p>
+<p><b>Média aproximada por membro:</b> ${mediaGrupo.toFixed(1)}</p>
+`.trim();
+
+    // Visão geral (sem nomes)
+    const visaoGeral =
+        mediaGrupo >= 100
+            ? "A unidade operou em ritmo forte ao longo da semana. Houve presença constante nos principais horários e a produção geral ficou em um patamar sólido para os padrões da MSY."
+            : mediaGrupo >= 40
+            ? "A unidade manteve uma semana estável, com picos de atividade em determinados momentos e períodos de silêncio acima do ideal. A produção é aceitável, mas há margem clara para subida."
+            : "A semana foi marcada por baixa atividade. Houve longos intervalos sem movimento relevante e a tropa permaneceu aquém do padrão de presença esperado pela MSY.";
+
+    // Top 3
+    const listaTop3 = top3
+        .map((m, i) => {
+            const pos = i + 1;
+            const tag =
+                pos === 1
+                    ? "constância e liderança"
+                    : pos === 2
+                    ? "compromisso e presença estáveis"
+                    : "regularidade e apoio constante ao fluxo do grupo";
+            return `<p><b>${pos}º - ${m.nome}</b> — ${m.total} mensagens na semana. Demonstra ${tag} ao longo do período.</p>`;
+        })
+        .join('\n');
+
+    // Análise geral (pontos fortes e atenção)
+    const pontosFortes =
+        mediaGrupo >= 70
+            ? "Há um núcleo consistente de membros que puxam o ritmo, sustentando o fluxo de mensagens e mantendo o grupo vivo nos momentos decisivos."
+            : "Mesmo com oscilação, alguns membros mantêm participação firme, garantindo que o grupo não fique completamente inativo.";
+
+    const pontosAtencao =
+        mediaGrupo >= 70
+            ? "Parte da base ainda aparece de forma pontual ou quase inexistente. Essa distância entre núcleo ativo e restante da unidade precisa ser reduzida."
+            : "A maioria dos membros está abaixo do nível desejado de participação. Se a tendência continuar, decisões mais duras sobre permanência na linha de frente podem ser necessárias.";
+
+    // Metas (3 a 5 metas claras)
+    const metas = `
+<ul>
+    <li>Aumentar a presença diária média por membro em relação à semana atual.</li>
+    <li>Reduzir períodos longos de silêncio, mantendo o grupo em operação nos horários de maior movimento.</li>
+    <li>Trazer pelo menos parte dos membros menos ativos para um nível mínimo de participação visível.</li>
+    <li>Manter o padrão dos destaques da semana como referência de disciplina para o restante da unidade.</li>
+</ul>
+`.trim();
+
+    // Mensagem final (curta, firme e inspiradora)
+    const mensagemFinal =
+        "A MSY não trabalha com acaso ou improviso. Quem está na unidade é porque escolheu estar em movimento. A próxima semana é oportunidade para ajustar rota, corrigir postura e mostrar, em números, quem realmente está alinhado com a ordem.";
+
+    const html = `
+<h3>🛡️ Cabeçalho Oficial</h3>
+${cabecalho}
+
+<h3>📈 Visão Geral da Semana</h3>
+<p>${visaoGeral}</p>
+
+<h3>🏅 Top 3 da Semana</h3>
+${listaTop3}
+
+<h3>📊 Análise Geral do Grupo</h3>
+<p><b>Pontos fortes:</b> ${pontosFortes}</p>
+<p><b>Pontos de atenção:</b> ${pontosAtencao}</p>
+
+<h3>🎯 Metas e Direcionamento</h3>
+${metas}
+
+<h3>📜 Mensagem Final</h3>
+<p>${mensagemFinal}</p>
+    `.trim();
+
+    divRelatorio.innerHTML = html;
+    document.getElementById('area-ia').scrollIntoView({ behavior: 'smooth' });
+}
+
 
     function extrairDadosDaTabela() {
         const rows = document.querySelectorAll('#resultado tbody tr');
