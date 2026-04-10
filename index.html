@@ -1,64 +1,231 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSY | Analisador de Performance Semanal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>MSY — Analytics | Intelligence System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<div class="container">
-    <h1>MSY ANALYTICS</h1>
-    <div class="subtitle">Sistema de Performance Semanal</div>
-    
-    <div class="controls">
-        <div class="control-group">
-            <label>Arquivo do Chat</label>
-            <input type="file" id="arquivoInput" accept=".txt">
+  <!-- NOISE + VIGNETTE via CSS -->
+  <div class="app-wrapper">
+
+    <!-- HEADER -->
+    <header>
+      <p class="header-eyebrow">𓂀 &nbsp; SISTEMA ANALÍTICO INTERNO &nbsp; 𓂀</p>
+      <div class="header-crest">
+        <div class="header-line"></div>
+        <div class="wine-icon-wrap">
+          <svg class="wine-svg" viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 2h24l-4 22a12 12 0 01-12 10A12 12 0 018 24L4 2z" stroke="#8b0000" stroke-width="1.5" fill="none"/>
+            <path d="M8 2h24l-4 22a12 12 0 01-12 10A12 12 0 018 24L4 2z" fill="url(#wineFill)" opacity="0.4"/>
+            <line x1="20" y1="34" x2="20" y2="52" stroke="#8b0000" stroke-width="1.5"/>
+            <line x1="12" y1="52" x2="28" y2="52" stroke="#8b0000" stroke-width="1.5" stroke-linecap="round"/>
+            <ellipse cx="20" cy="16" rx="8" ry="4" fill="#8b0000" opacity="0.3"/>
+            <defs>
+              <linearGradient id="wineFill" x1="20" y1="2" x2="20" y2="34" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#8b0000"/>
+                <stop offset="1" stop-color="#3d0000"/>
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
-        
-        <div class="control-group">
-            <label>Período de Análise</label>
-            <div class="date-inputs">
-                <label>Início <input type="date" id="dataInicio" value="2026-01-01"></label>
-                <label>Fim <input type="date" id="dataFim" value="2026-01-05"></label>
+        <div class="header-line"></div>
+      </div>
+      <h1><span class="h1-red">Msy</span><span class="h1-dash"> — </span><span class="h1-red">Analytics</span></h1>
+      <h2><span class="h2-line"></span><span class="h2-text">Intelligence System</span><span class="h2-line"></span></h2>
+
+      <!-- MODE SELECTOR -->
+      <div class="mode-selector">
+        <button class="mode-btn active" id="modeWeekly" onclick="switchMode('weekly')">
+          <span class="mode-icon">◈</span>
+          <span class="mode-label">Semanal</span>
+          <span class="mode-sub">Weekly Report</span>
+        </button>
+        <div class="mode-divider">
+          <div class="mode-divider-line"></div>
+          <span class="mode-divider-symbol">⟐</span>
+          <div class="mode-divider-line"></div>
+        </div>
+        <button class="mode-btn" id="modeMonthly" onclick="switchMode('monthly')">
+          <span class="mode-icon">◉</span>
+          <span class="mode-label">Mensal</span>
+          <span class="mode-sub">Monthly Insights</span>
+        </button>
+      </div>
+
+      <div class="header-divider">
+        <div class="header-divider-dot"></div>
+        <span class="header-motto">O sangue faz o parente, mas só a lealdade faz a família.</span>
+        <div class="header-divider-dot"></div>
+      </div>
+    </header>
+
+    <!-- INPUT PANEL -->
+    <div class="panel" id="inputPanel">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+
+      <div class="section-title">
+        <span class="section-title-text" id="sectionLabel">Parâmetros de Análise — Semanal</span>
+        <div class="section-title-line"></div>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Data Início</label>
+          <input type="text" id="dataInicio" placeholder="DD/MM/AAAA" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>Data Fim</label>
+          <input type="text" id="dataFim" placeholder="DD/MM/AAAA" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>Arquivo do Chat (.txt)</label>
+          <div class="file-input-wrapper">
+            <div class="file-input-display" id="fileDisplay">
+              <span class="file-icon">
+                <svg width="14" height="16" viewBox="0 0 14 16" fill="none">
+                  <path d="M2 1h7l4 4v10H2V1z" stroke="#555" stroke-width="1"/>
+                  <path d="M9 1v4h4" stroke="#555" stroke-width="1"/>
+                </svg>
+              </span>
+              <span id="fileLabel">Selecionar arquivo...</span>
             </div>
+            <input type="file" id="chatFile" accept=".txt" />
+          </div>
         </div>
-        
-        <div class="control-group">
-            <label style="opacity: 0;">Ação</label>
-            <button onclick="enviarParaAnalise()">🚀 Iniciar Análise</button>
-        </div>
+      </div>
+
+      <button class="btn-analyze" id="analisarBtn">
+        <span>⟡ &nbsp; Iniciar Análise &nbsp; ⟡</span>
+        <div class="btn-shimmer"></div>
+      </button>
     </div>
 
-    <div id="filtros-area">
-        <span>Filtros:</span>
-        <input type="text" id="searchBar" placeholder="Buscar membro..." onkeyup="filtrarPorTexto()">
-        <div class="chips-container" id="listaMembros"></div>
+    <!-- FILTER PANEL -->
+    <div class="panel" id="filterSection" style="display:none;">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="section-title">
+        <span class="section-title-text">Filtros de Membros</span>
+        <div class="section-title-line"></div>
+      </div>
+      <div class="search-wrapper">
+        <span class="search-icon">◎</span>
+        <input type="text" id="searchMembro" placeholder="Buscar membro..." />
+      </div>
+      <div id="tagsContainer" class="tags-container"></div>
     </div>
 
-    <div id="loadingAnalise" class="loading">⏳ Processando dados</div>
-    <div id="resultado"></div>
-
-    <div id="area-ia">
-        <h2>🤖 Relatório Inteligente</h2>
-        <div class="ia-box">
-            <label>Instrução Personalizada (Opcional):</label>
-            <textarea id="promptIA" placeholder="Ex: Seja sarcástico e faça piada com quem falou pouco. Dê um prêmio fictício para o top 1."></textarea>
-            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
-                <button onclick="gerarRelatorioIA()">✨ Gerar Relatório com IA</button>
-                <button onclick="gerarRelatorioBase()">📄 Gerar Relatório Base</button>
-            </div>
-            
-            <div id="loadingIA" class="loading">🧠 IA processando análise</div>
-            <div id="relatorio-final"></div>
+    <!-- RESULTS -->
+    <div class="results-section">
+      <div class="section-title">
+        <span class="section-title-text" id="resultLabel">Resultado da Análise</span>
+        <div class="section-title-line"></div>
+        <button class="btn-copy" id="copyBtn" onclick="copiarTabela()" style="display:none;">
+          <span>⎘ &nbsp; Copiar para Excel</span>
+        </button>
+      </div>
+      <div class="resultado-box" id="resultadoHTML">
+        <div class="empty-state">
+          <div class="empty-wine">
+            <svg viewBox="0 0 60 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3h36l-6 33a18 18 0 01-18 15A18 18 0 016 36L0 3z" stroke="#1a1a1a" stroke-width="2" fill="none" transform="translate(6,0)"/>
+              <path d="M12 3h36l-6 33a18 18 0 01-18 15A18 18 0 016 36L0 3z" fill="url(#emptyWine)" opacity="0.15" transform="translate(6,0)"/>
+              <line x1="30" y1="52" x2="30" y2="78" stroke="#1a1a1a" stroke-width="2"/>
+              <line x1="18" y1="78" x2="42" y2="78" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+              <defs>
+                <linearGradient id="emptyWine" x1="30" y1="3" x2="30" y2="52" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#8b0000"/>
+                  <stop offset="1" stop-color="#2a0000"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <p class="empty-state-text">Aguardando análise da Masayoshi...</p>
         </div>
+      </div>
     </div>
-</div>
 
-<script src="script.js"></script>
+    <!-- AI REPORT (WEEKLY ONLY) -->
+    <div id="areaIA" style="display:none;" class="panel ia-panel">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="section-title">
+        <span class="section-title-text">Relatório Inteligente</span>
+        <div class="section-title-line"></div>
+      </div>
+      <div class="ia-field">
+        <label class="ia-label">Instrução Personalizada <span style="opacity:.4;">(opcional)</span></label>
+        <textarea id="promptIA" placeholder="Ex: Seja direto e destaque quem merece reconhecimento. Dê contexto estratégico."></textarea>
+      </div>
+      <div class="ia-actions">
+        <button class="btn-ia btn-ia-ai" onclick="gerarRelatorioBase()">
+          <span>◈ &nbsp; Gerar Relatório</span>
+        </button>
+      </div>
+      <div id="relatorioFinal" class="relatorio-final"></div>
+    </div>
 
+    <footer>
+      <div class="footer-seal">
+        <div class="footer-line"></div>
+        <div class="footer-seal-icon">
+          <svg viewBox="0 0 30 30" width="20" fill="none">
+            <circle cx="15" cy="15" r="13" stroke="#1e1e1e" stroke-width="1"/>
+            <path d="M15 5 L17 11 L23 11 L18.5 14.5 L20 20.5 L15 17 L10 20.5 L11.5 14.5 L7 11 L13 11 Z" fill="#8b0000" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="footer-line right"></div>
+      </div>
+      <p class="footer-worthy">Only the worthy remain in Masayoshi...</p>
+      <p class="footer-credit">criado por xitter</p>
+    </footer>
+
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div id="loadingOverlay" class="loading-overlay" style="display:none;">
+    <div class="loading-content">
+      <div class="loading-wine-wrap">
+        <svg class="loading-wine-svg" viewBox="0 0 340 580" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="170" cy="548" rx="90" ry="14" fill="#550000" stroke="#8b0000" stroke-width="2.5"/>
+          <ellipse cx="170" cy="538" rx="72" ry="10" fill="#6b0000" stroke="#8b0000" stroke-width="1.8"/>
+          <path d="M163 380 L163 538 Q166 540 170 540 Q174 540 177 538 L177 380 Z" fill="#6b0000" stroke="#8b0000" stroke-width="1.5"/>
+          <path d="M170 380 C150 378 125 370 102 352 C78 332 58 302 48 268 C38 234 38 196 42 162 C44 144 48 128 52 112 L170 112" fill="#8b0000"/>
+          <path d="M170 380 C190 378 215 370 238 352 C262 332 282 302 292 268 C302 234 302 196 298 162 C296 144 292 128 288 112 L170 112" fill="#8b0000"/>
+          <path d="M170 380 C150 378 125 370 102 352 C78 332 58 302 48 268 C42 248 40 228 42 210 L298 210 C300 228 298 248 292 268 C282 302 262 332 238 352 C215 370 190 378 170 380 Z" fill="#7a0000"/>
+          <path d="M44 210 Q170 200 296 210" stroke="#aa1020" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.8"/>
+          <path d="M52 112 C48 128 44 144 42 162 C38 196 38 234 48 268 C58 302 78 332 102 352 C125 370 150 378 170 380 C190 378 215 370 238 352 C262 332 282 302 292 268 C302 234 302 196 298 162 C296 144 292 128 288 112" stroke="#9b0010" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M52 112 Q170 96 288 112" stroke="#9b0010" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <path d="M58 130 C54 155 51 182 52 210 C53 232 58 254 66 274" stroke="#ff5555" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.18"/>
+        </svg>
+        <div class="wine-fill-bar">
+          <div class="wine-fill-progress" id="wineFillProgress"></div>
+        </div>
+      </div>
+      <p class="loading-title">PROCESSANDO</p>
+      <p class="loading-sub" id="loadingMessage">Analisando dados da Masayoshi...</p>
+      <div class="loading-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
