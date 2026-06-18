@@ -14,6 +14,10 @@ const WEBHOOKS = {
   iaReport: 'https://warm-polls-treasury-gay.trycloudflare.com/webhook/gerar-relatorio',
 };
 
+// Limite de upload (precisa bater com N8N_PAYLOAD_SIZE_MAX no servidor n8n)
+const MAX_FILE_MB    = 35;
+const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
+
 const LOADING_MESSAGES = [
   'Analisando dados da Masayoshi...',
   'Processando na central Oracle...',
@@ -51,8 +55,25 @@ function initFlatpickr() {
 function initFileInput() {
   const fileInput = document.getElementById('chatFile');
   fileInput.addEventListener('change', function () {
-    const label = this.files.length ? this.files[0].name : 'Selecionar arquivo...';
-    document.getElementById('fileLabel').textContent = label;
+    const labelEl = document.getElementById('fileLabel');
+
+    if (!this.files.length) {
+      labelEl.textContent = 'Selecionar arquivo...';
+      return;
+    }
+
+    const file = this.files[0];
+
+    if (file.size > MAX_FILE_BYTES) {
+      const mb = (file.size / 1024 / 1024).toFixed(1);
+      labelEl.textContent = `Arquivo muito grande (${mb} MB)`;
+      this.value = ''; // limpa a seleção inválida
+      showError(`⚠ &nbsp; O arquivo tem ${mb} MB. O limite é de ${MAX_FILE_MB} MB. Reduza o arquivo e tente novamente.`);
+      return;
+    }
+
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    labelEl.textContent = `${file.name} (${mb} MB)`;
   });
 }
 
@@ -109,7 +130,15 @@ async function runAnalysis() {
     return;
   }
 
-  const text = await fileInput.files[0].text();
+  const file = fileInput.files[0];
+
+  if (file.size > MAX_FILE_BYTES) {
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    showError(`⚠ &nbsp; O arquivo tem ${mb} MB. O limite é de ${MAX_FILE_MB} MB.`);
+    return;
+  }
+
+  const text = await file.text();
 
   btn.disabled = true;
   showLoadingOverlay();
@@ -138,7 +167,12 @@ async function runAnalysis() {
     }
   } catch (err) {
     hideLoadingOverlay();
-    showError('⚠ &nbsp; Erro ao conectar com o servidor. Verifique a conexão n8n.');
+    const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+    showError(
+      `⚠ &nbsp; Não foi possível conectar ao servidor (n8n).<br>` +
+      `Se o arquivo é grande (${sizeMb} MB), verifique se o n8n aceita esse tamanho ` +
+      `(N8N_PAYLOAD_SIZE_MAX) e se o CORS está liberado para t4msy.github.io.`
+    );
     console.error('[MSY Oracle] Error:', err);
   } finally {
     btn.disabled = false;
