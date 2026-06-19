@@ -47,7 +47,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initFlatpickr() {
-  const opts = { dateFormat: 'd/m/Y', locale: 'pt' };
+  // disableMobile: true => usa o calendário próprio do flatpickr em TODOS os
+  // dispositivos. Sem isso, no Android/iOS o flatpickr cai pro seletor nativo,
+  // que devolve a data como "AAAA-MM-DD" e quebra o split('/') do buildPayload,
+  // impedindo a criação da tabela.
+  const opts = { dateFormat: 'd/m/Y', locale: 'pt', disableMobile: true };
   flatpickrInicio = flatpickr('#dataInicio', opts);
   flatpickrFim    = flatpickr('#dataFim', opts);
 }
@@ -180,19 +184,29 @@ async function runAnalysis() {
 }
 
 function buildPayload(text, inicio, fim) {
-  // Normalize date: both systems accept DD/MM/YYYY, but weekly also uses YYYY-MM-DD
-  // Send both formats for maximum compatibility
-  const partsI = inicio.split('/');
-  const partsF = fim.split('/');
-
-  const isoInicio = partsI.length === 3 ? `${partsI[2]}-${partsI[1]}-${partsI[0]}` : inicio;
-  const isoFim    = partsF.length === 3 ? `${partsF[2]}-${partsF[1]}-${partsF[0]}` : fim;
-
+  // Aceita tanto "DD/MM/AAAA" quanto o nativo "AAAA-MM-DD" (Android/iOS) e
+  // normaliza nos dois formatos que os fluxos n8n esperam.
   return {
     chat:  text,
-    inicio: currentMode === 'weekly' ? isoInicio : inicio,
-    fim:    currentMode === 'weekly' ? isoFim    : fim,
+    inicio: currentMode === 'weekly' ? toIso(inicio) : toBr(inicio),
+    fim:    currentMode === 'weekly' ? toIso(fim)    : toBr(fim),
   };
+}
+
+// "DD/MM/AAAA" ou "AAAA-MM-DD" -> "AAAA-MM-DD"
+function toIso(str) {
+  if (!str) return str;
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+  const p = str.split('/');
+  return p.length === 3 ? `${p[2]}-${p[1].padStart(2, '0')}-${p[0].padStart(2, '0')}` : str;
+}
+
+// "DD/MM/AAAA" ou "AAAA-MM-DD" -> "DD/MM/AAAA"
+function toBr(str) {
+  if (!str) return str;
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return str;
 }
 
 // =====================================
@@ -329,8 +343,10 @@ function injectWeekdays() {
 }
 
 function parseDateInput(str) {
-  // "DD/MM/AAAA" — local time, no UTC shift
+  // Aceita "DD/MM/AAAA" e "AAAA-MM-DD" (nativo) — local time, no UTC shift
   if (!str) return null;
+  const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return new Date(parseInt(iso[1],10), parseInt(iso[2],10) - 1, parseInt(iso[3],10));
   const p = str.split('/');
   if (p.length !== 3) return null;
   return new Date(parseInt(p[2],10), parseInt(p[1],10) - 1, parseInt(p[0],10));
