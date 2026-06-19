@@ -142,14 +142,16 @@ async function runAnalysis() {
     return;
   }
 
-  const text = await file.text();
-
   btn.disabled = true;
   showLoadingOverlay();
   hideFilterSection();
   resetResultados();
 
   try {
+    // Lê o arquivo de forma compatível com Android antigo / WebViews
+    // (Instagram, WhatsApp, Facebook) onde File.text() não existe.
+    const text = await readFileText(file);
+
     const webhook = currentMode === 'weekly' ? WEBHOOKS.weekly : WEBHOOKS.monthly;
     const payload = buildPayload(text, dataInicio, dataFim);
 
@@ -172,15 +174,43 @@ async function runAnalysis() {
   } catch (err) {
     hideLoadingOverlay();
     const sizeMb = (file.size / 1024 / 1024).toFixed(1);
-    showError(
-      `⚠ &nbsp; Não foi possível conectar ao servidor (n8n).<br>` +
-      `Se o arquivo é grande (${sizeMb} MB), verifique se o n8n aceita esse tamanho ` +
-      `(N8N_PAYLOAD_SIZE_MAX) e se o CORS está liberado para t4msy.github.io.`
-    );
+    const isReadError = err && /ler o arquivo|read|NotReadable|FileReader/i.test(String(err.message || err));
+    if (isReadError) {
+      showError(
+        `⚠ &nbsp; Não foi possível ler o arquivo no seu aparelho.<br>` +
+        `Tente abrir esta página no <strong>Chrome</strong> (não pelo navegador interno do WhatsApp/Instagram) ` +
+        `e selecione novamente o arquivo .txt do chat.`
+      );
+    } else {
+      showError(
+        `⚠ &nbsp; Não foi possível conectar ao servidor (n8n).<br>` +
+        `Se o arquivo é grande (${sizeMb} MB), verifique se o n8n aceita esse tamanho ` +
+        `(N8N_PAYLOAD_SIZE_MAX) e se o CORS está liberado para t4msy.github.io.`
+      );
+    }
     console.error('[MSY Oracle] Error:', err);
   } finally {
     btn.disabled = false;
   }
+}
+
+// Leitura de arquivo compatível com Android antigo / navegadores embutidos.
+function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    try {
+      const reader = new FileReader();
+      reader.onload  = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(reader.error || new Error('Falha ao ler o arquivo'));
+      reader.readAsText(file, 'UTF-8');
+    } catch (e) {
+      // Fallback para navegadores onde FileReader não está disponível
+      if (file && typeof file.text === 'function') {
+        file.text().then(resolve, reject);
+      } else {
+        reject(e);
+      }
+    }
+  });
 }
 
 function buildPayload(text, inicio, fim) {
