@@ -1273,4 +1273,6 @@ span.flatpickr-weekday {
   .mode-btn { padding: 14px 28px; }
   .ia-actions { flex-direction: column; }
   .btn-ia { width: 100%; text-align: center; }
+  .results-section .section-title { flex-wrap: wrap; }
+  .results-section .section-title .btn-copy { flex: 1 1 auto; text-align: center; }
 }

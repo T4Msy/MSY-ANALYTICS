@@ -315,6 +315,7 @@ function renderResults(html) {
   box.innerHTML = `<div class="table-scroll">${html}</div>`;
 
   document.getElementById('copyBtn').style.display = 'flex';
+  document.getElementById('pdfBtn').style.display = 'flex';
 
   setTimeout(() => {
     normalizeNamesInTable();
@@ -766,6 +767,92 @@ function copiarTabela() {
 }
 
 // =====================================
+// DOWNLOAD PDF (mesma cara da tabela)
+// =====================================
+async function baixarPDF() {
+  const box   = document.querySelector('.resultado-box');
+  const table = box && box.querySelector('.table-scroll table');
+  if (!table) return;
+
+  if (typeof html2canvas === 'undefined' || !window.jspdf) {
+    showError('⚠ &nbsp; Biblioteca de PDF não carregou. Verifique sua conexão e recarregue a página.');
+    return;
+  }
+
+  const btn  = document.getElementById('pdfBtn');
+  const span = btn.querySelector('span');
+  const original = span.textContent;
+  span.textContent = '⏳  Gerando...';
+  btn.disabled = true;
+
+  // Clona a box fora da tela em largura total, para nada ficar cortado
+  // pelo scroll horizontal nem pelo overflow:hidden da box.
+  const fullWidth = Math.max(table.scrollWidth, box.clientWidth);
+  const clone = box.cloneNode(true);
+  clone.style.position   = 'fixed';
+  clone.style.left       = '-99999px';
+  clone.style.top        = '0';
+  clone.style.width      = fullWidth + 'px';
+  clone.style.minHeight  = 'auto';
+  clone.style.overflow   = 'visible';
+  clone.style.margin     = '0';
+  const cloneScroll = clone.querySelector('.table-scroll');
+  if (cloneScroll) cloneScroll.style.overflow = 'visible';
+  document.body.appendChild(clone);
+
+  try {
+    // Aguarda fontes carregarem para a captura sair fiel.
+    if (document.fonts && document.fonts.ready) {
+      try { await document.fonts.ready; } catch (_) {}
+    }
+
+    const canvas = await html2canvas(clone, {
+      backgroundColor: '#080808',
+      scale: 2,
+      logging: false,
+      useCORS: true,
+      windowWidth: fullWidth,
+    });
+
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({
+      orientation: imgW >= imgH ? 'landscape' : 'portrait',
+      unit: 'px',
+      format: [imgW, imgH],
+    });
+
+    // Fundo escuro antes da imagem (mesma cor da box)
+    pdf.setFillColor(8, 8, 8);
+    pdf.rect(0, 0, imgW, imgH, 'F');
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, imgW, imgH);
+
+    pdf.save(buildPdfFilename());
+
+    span.textContent = '✓  Baixado!';
+    setTimeout(() => { span.textContent = original; }, 2500);
+  } catch (err) {
+    console.error('[MSY Oracle] PDF error:', err);
+    span.textContent = original;
+    showError('⚠ &nbsp; Não foi possível gerar o PDF. Tente novamente.');
+  } finally {
+    document.body.removeChild(clone);
+    btn.disabled = false;
+  }
+}
+
+function buildPdfFilename() {
+  const sanitize = s => (s || '').replace(/\//g, '-').replace(/[^0-9A-Za-z\-]/g, '');
+  const inicio = sanitize(document.getElementById('dataInicio').value);
+  const fim    = sanitize(document.getElementById('dataFim').value);
+  const modo   = currentMode === 'weekly' ? 'Semanal' : 'Mensal';
+  const periodo = inicio && fim ? `_${inicio}_a_${fim}` : '';
+  return `MSY-Analytics_${modo}${periodo}.pdf`;
+}
+
+// =====================================
 // HELPERS
 // =====================================
 function showError(msg) {
@@ -795,6 +882,7 @@ function resetResultados() {
       <p class="empty-state-text">Aguardando análise da Masayoshi...</p>
     </div>`;
   document.getElementById('copyBtn').style.display = 'none';
+  document.getElementById('pdfBtn').style.display = 'none';
   document.getElementById('relatorioFinal').innerHTML = '';
   dadosParaRelatorio = '';
 }

@@ -136,6 +136,9 @@
         <button class="btn-copy" id="copyBtn" onclick="copiarTabela()" style="display:none;">
           <span>⎘ &nbsp; Copiar para Excel</span>
         </button>
+        <button class="btn-copy" id="pdfBtn" onclick="baixarPDF()" style="display:none;">
+          <span>⬇ &nbsp; Baixar PDF</span>
+        </button>
       </div>
       <div class="resultado-box" id="resultadoHTML">
         <div class="empty-state">
@@ -227,6 +230,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
