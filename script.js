@@ -284,8 +284,18 @@ function normalizeNamesInTable() {
   const table = document.querySelector('.resultado-box .table-scroll table');
   if (!table) return;
 
-  // Body rows — first cell is name
-  table.querySelectorAll('tbody tr').forEach(row => {
+  const tbody = table.querySelector('tbody');
+  if (!tbody) return;
+
+  const numCols    = table.querySelectorAll('thead th').length;
+  const numPeriods = numCols - 3;
+  const totalCol   = numCols - 2;
+  const avgCol     = numCols - 1;
+
+  // canonical name -> row already kept for that member
+  const seen = new Map();
+
+  Array.from(tbody.querySelectorAll('tr')).forEach(row => {
     const cell = row.cells[0];
     if (!cell) return;
 
@@ -298,15 +308,31 @@ function normalizeNamesInTable() {
     const normalized = normalizeName(rawText);
 
     if (normalized === null) {
-      // Hide system/ignored rows
-      row.style.display = 'none';
+      // Remove system/ignored rows entirely
+      row.remove();
       return;
     }
 
-    // Rebuild cell keeping medal prefix
-    cell.innerHTML = medal
-      ? `${medal} ${normalized}`
-      : normalized;
+    const existing = seen.get(normalized);
+    if (!existing) {
+      cell.innerHTML = medal ? `${medal} ${normalized}` : normalized;
+      seen.set(normalized, row);
+      return;
+    }
+
+    // Same person already has a row (e.g. two raw sender names mapped to the
+    // same canonical name) — merge the numeric columns instead of keeping a
+    // duplicate row/chip.
+    for (let col = 1; col <= totalCol && col < row.cells.length; col++) {
+      const a = parseFloat(existing.cells[col]?.innerText.replace(',', '.')) || 0;
+      const b = parseFloat(row.cells[col]?.innerText.replace(',', '.')) || 0;
+      if (existing.cells[col]) existing.cells[col].innerText = String(Math.floor(a + b));
+    }
+    if (existing.cells[avgCol] && numPeriods > 0) {
+      const total = parseFloat(existing.cells[totalCol]?.innerText.replace(',', '.')) || 0;
+      existing.cells[avgCol].innerText = (total / numPeriods).toFixed(1);
+    }
+    row.remove();
   });
 }
 
@@ -457,9 +483,11 @@ function setupFilters() {
   container.innerHTML = '';
 
   const rows   = Array.from(table.querySelectorAll('tbody tr'));
-  const members = rows
-    .map(r => r.cells[0].innerText.replace(/🥇|🥈|🥉/g, '').trim())
-    .filter(n => n && !n.toLowerCase().includes('total'));
+  const members = [...new Set(
+    rows
+      .map(r => r.cells[0].innerText.replace(/🥇|🥈|🥉/g, '').trim())
+      .filter(n => n && !n.toLowerCase().includes('total'))
+  )];
 
   members.forEach(name => {
     const tag = document.createElement('div');
